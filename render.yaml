@@ -1,0 +1,17 @@
+# Render Blueprint for Tulare County AI Chatbot backend
+services:
+  - type: web
+    name: tulare-chatbot-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    rootDir: backend
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_PASSWORD
+        value: demo2026
+      - key: MODEL_NAME
+        value: claude-haiku-4-5-20251001

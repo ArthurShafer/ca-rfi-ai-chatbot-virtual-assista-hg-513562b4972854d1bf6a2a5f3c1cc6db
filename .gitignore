@@ -29,3 +29,6 @@ Thumbs.db
 .env.production
 *.key
 *.pem
+
+# Test artifacts
+test-screenshots/
