@@ -1,0 +1,152 @@
+# Skill Manifest
+# Tracks installed skills, their purpose, and usage for periodic cleanup
+
+core:
+  # ═══════════════════════════════════════════════════════════════
+  # WORKFLOW SKILLS (Custom - maintained in this repo)
+  # ═══════════════════════════════════════════════════════════════
+  - name: environment-constraints
+    source: local
+    purpose: "FIRST STEP - Research target org IT environment before brainstorming"
+
+  - name: brainstorming
+    source: local
+    purpose: "Design and implementation planning - produces implementation prompts"
+
+  - name: prompt-alignment
+    source: local
+    purpose: "Review, right-size, and align implementation prompts before handoff. Agent-team analysis + execution guide generation."
+
+  - name: implementation-executor
+    source: local
+    purpose: "Passthrough validation and execution workflow with cost estimates"
+
+  - name: demo-packager
+    source: local
+    purpose: "7-phase packaging pipeline: dev repo to professional deliverable with clean code, branded docs, Terraform IaC, curated git history, and zero AI fingerprints"
+
+  - name: response-package
+    source: local
+    purpose: "Generate branded RFP/RFI response package from demo + intel — 6 sections rendered to PDF/DOCX"
+
+  - name: find-skills
+    source: local
+    purpose: "Skill discovery from skills.sh ecosystem"
+
+  # ═══════════════════════════════════════════════════════════════
+  # FRONTEND SKILLS
+  # ═══════════════════════════════════════════════════════════════
+  - name: react-best-practices
+    source: local (vercel origin)
+    purpose: "React/Next.js performance patterns"
+
+  - name: nextjs-app-router-patterns
+    source: wshobson/agents
+    purpose: "Next.js App Router patterns and best practices"
+
+  - name: tailwind-design-system
+    source: wshobson/agents
+    purpose: "Tailwind CSS design system patterns"
+
+  - name: ui-ux-pro-max
+    source: local
+    purpose: "UI/UX design and styling intelligence"
+
+  # ═══════════════════════════════════════════════════════════════
+  # BACKEND SKILLS
+  # ═══════════════════════════════════════════════════════════════
+  - name: fastapi-templates
+    source: wshobson/agents
+    purpose: "FastAPI backend patterns and templates"
+
+  - name: api-design-principles
+    source: wshobson/agents
+    purpose: "REST API design best practices"
+
+  - name: postgresql-table-design
+    source: wshobson/agents
+    purpose: "PostgreSQL database schema design"
+
+  # ═══════════════════════════════════════════════════════════════
+  # TESTING & QUALITY
+  # ═══════════════════════════════════════════════════════════════
+  - name: webapp-testing
+    source: anthropics/skills
+    purpose: "End-to-end web application testing"
+
+  - name: browsing
+    source: local
+    purpose: "Browser automation and testing"
+
+  - name: security-review
+    source: sickn33/antigravity-awesome-skills
+    purpose: "Security-conscious code review"
+
+  # ═══════════════════════════════════════════════════════════════
+  # DEVOPS & DEPLOYMENT
+  # ═══════════════════════════════════════════════════════════════
+  - name: docker-expert
+    source: sickn33/antigravity-awesome-skills
+    purpose: "Docker containerization best practices"
+
+  - name: git-advanced-workflows
+    source: wshobson/agents
+    purpose: "Git workflows and clean history"
+
+  # ═══════════════════════════════════════════════════════════════
+  # DOCUMENTATION
+  # ═══════════════════════════════════════════════════════════════
+  - name: crafting-effective-readmes
+    source: softaworks/agent-toolkit
+    purpose: "Professional README documentation"
+
+  # ═══════════════════════════════════════════════════════════════
+  # AGENT & SKILL DEVELOPMENT
+  # ═══════════════════════════════════════════════════════════════
+  - name: skill-creator
+    source: anthropics/skills
+    purpose: "Create new skills"
+
+  - name: agent-development
+    source: anthropics/claude-code
+    purpose: "Build AI agents"
+
+  - name: skill-development
+    source: anthropics/claude-code
+    purpose: "Skill development best practices"
+
+  - name: mcp-integration
+    source: anthropics/claude-code
+    purpose: "MCP server integration"
+
+  # ═══════════════════════════════════════════════════════════════
+  # OTHER
+  # ═══════════════════════════════════════════════════════════════
+  - name: highergov-discovery
+    source: local
+    purpose: "Browse HigherGov portal to discover missed opportunities, analyze competitors, find teaming partners, and tune API parameters"
+
+  - name: feature-intake
+    source: local
+    purpose: "Feature specification structuring"
+
+discovered:
+  # Skills installed via find-skills - subject to periodic cleanup
+  # Format:
+  # - name: skill-name
+  #   source: owner/repo@skill
+  #   installed: YYYY-MM-DD
+  #   reason: "Why this was needed"
+  #   last_used: YYYY-MM-DD
+  #   campaigns: ["campaign-ids that use this"]
+  #   keep: true/false
+
+cleanup:
+  # Skills marked for removal in next cleanup
+
+audit_log:
+  # Record of cleanup decisions
+  # - date: YYYY-MM-DD
+  #   reviewed: [skill-names]
+  #   removed: [skill-names]
+  #   kept: [skill-names]
