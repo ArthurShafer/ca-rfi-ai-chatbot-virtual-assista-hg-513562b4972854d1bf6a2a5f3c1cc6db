@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars and fill in values
+
+# DigitalOcean API token
+# Create at: https://cloud.digitalocean.com/account/api/tokens
+do_token = "dop_v1_your-token-here"
+
+# Path to your SSH public key
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+
+# Region (sfo3 = San Francisco, closest to Tulare County)
+region = "sfo3"
