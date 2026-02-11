@@ -24,14 +24,27 @@ export default function ChatWidget() {
   const [department, setDepartment] = useState<string | null>(null);
   const [showEscalation, setShowEscalation] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = useCallback(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+  const scrollToBottom = useCallback(
+    (instant?: boolean) => {
+      const container = scrollContainerRef.current;
+      if (container) {
+        if (instant) {
+          container.scrollTop = container.scrollHeight;
+        } else {
+          chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    },
+    []
+  );
 
+  // During streaming, snap to bottom instantly on every chunk.
+  // On non-streaming updates (user sends message), smooth scroll.
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    scrollToBottom(isStreaming);
+  }, [messages, scrollToBottom, isStreaming]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -157,7 +170,8 @@ export default function ChatWidget() {
 
       {/* Messages */}
       <div
-        className="chat-scroll flex-1 overflow-y-auto px-2 py-4"
+        ref={scrollContainerRef}
+        className="chat-scroll flex-1 px-2 py-4"
         role="list"
         aria-label="Chat messages"
       >
