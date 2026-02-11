@@ -72,9 +72,21 @@ Run `python scripts/campaign.py status` to see current campaign state.
 6. Advance when complete: `python scripts/campaign.py advance`
 
 ### Phase: Testing
-1. `docker compose up --build` -- verify the app runs
-2. Manual QA review
-3. Advance: `python scripts/campaign.py advance`
+1. Run `docker compose up --build -d` and wait for all containers to report healthy
+2. Automated smoke tests: use curl to hit every endpoint in `docs/architecture/api-spec.md`
+   through both the backend directly AND the frontend proxy (if applicable). For each
+   endpoint, verify the expected HTTP status code and that the response is not an error.
+   Log a pass/fail table to stdout. If any test fails, diagnose and fix before proceeding.
+3. Common gotchas to check:
+   - Frontend server-side proxy routes must use a runtime env var (not NEXT_PUBLIC_* or other build-time-inlined vars) to reach backend containers. Build-time vars resolve to localhost inside the container, which breaks container-to-container calls.
+   - All services should have healthchecks in docker-compose.yml
+   - Test with auth headers where endpoints require authentication
+4. Visual smoke test: use the `webapp-testing` skill to launch a headless Playwright browser against
+   localhost. Navigate to each page/route, take a screenshot, and check the browser console for errors.
+   If any page shows a blank screen, React hydration error, or JS exception, diagnose and fix before
+   proceeding.
+5. If all automated checks pass, report results and leave containers running for manual QA review (UI/UX walkthrough at localhost)
+6. Advance: `python scripts/campaign.py advance`
 
 ### Phase: Documentation
 1. Generate Technical Response Package: `/response-package`
@@ -96,6 +108,13 @@ These are your ground truth. If something contradicts an architecture doc, the a
 
 ---
 
+## Docker Conventions
+- If the frontend proxies API calls through server-side routes, those routes must read the backend URL from a runtime environment variable (not a build-time var). Set this var in docker-compose.yml pointing to the internal service name.
+- All services in docker-compose.yml should have healthchecks.
+- Dependent services should use `depends_on` with `condition: service_healthy`.
+
+---
+
 ## Skills Available
 
 | Skill | Purpose |
@@ -108,6 +127,7 @@ These are your ground truth. If something contradicts an architecture doc, the a
 | react-best-practices | React/Next.js frontend |
 | fastapi-templates | FastAPI backend |
 | ui-ux-pro-max | UI/UX design |
+| webapp-testing | Playwright browser testing (screenshots, console errors, UI verification) |
 
 ---
 
@@ -134,7 +154,7 @@ All prose output must avoid AI tells. This applies to code comments, docs, READM
 
 ## Decision Log
 
-Log significant decisions in `logs/decisions/` using the schema from the parent system.
+Decisions are logged to the main contracts repo (not this campaign repo). The `log_decision.py` script reads `contracts_root` from `.campaign.json` and writes to `{contracts_root}/logs/decisions/{campaign_id}/` automatically.
 
 ---
 
