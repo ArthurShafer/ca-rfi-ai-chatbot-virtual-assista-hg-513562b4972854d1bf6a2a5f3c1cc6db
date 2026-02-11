@@ -26,33 +26,73 @@
 
 ---
 
+## Business Context & Demo Intent
+
+**Who we are**: Easy Company Cloudworks LLC (Arthur Shafer), an independent technologist specializing in AI/ML, AWS cloud architecture, and web development. We do not have government contracting credentials, agency relationships, or corporate infrastructure (insurance, bonds, etc.).
+
+**Our role**: Technical subcontractor to a prime contractor. We build the solution; the prime handles bidding, compliance, agency relationships, and contract administration.
+
+**What this demo is for**: A working prototype that proves technical feasibility to potential prime contractors. Most bidders submit slide decks. We show up with a deployable application that already solves the problem. This flips the conversation: instead of "can you build this?" it becomes "this already works, let's submit together."
+
+**Target audiences** (in priority order):
+1. **Prime contractor technical evaluators** (CTO, VP Engineering) who need to validate the approach is sound
+2. **Prime contractor business development** (CEO, VP BD) who need to see that teaming reduces their risk and accelerates their bid
+3. **Government agency evaluators** who will see the demo as part of the proposal's technical volume
+
+**What we bring**: Working demo, architecture docs, API specs, deployment playbooks, cost models, compliance matrix, and a technical response package ready for the prime to wrap in their corporate submission.
+
+**What the prime brings**: Government contracting credentials, certifications (8(a), SDVOSB, HUBZone, WOSB), agency relationships, past performance references, insurance/bonding, and corporate bid infrastructure.
+
+**Demo positioning**: Build for the actual solicitation requirements. Seed data should tell a coherent story relevant to the issuing agency. The demo should feel like a real product, not a proof-of-concept. It needs to run with `docker compose up` and be immediately impressive.
+
+**Design decisions should optimize for**: (1) Directly addressing solicitation requirements, (2) Visual impact in a 15-minute demo walkthrough, (3) Technical credibility with engineering evaluators, (4) Deployability and maintainability. Do not over-engineer or add features beyond what the solicitation asks for.
+
+---
+
 ## Workflow
 
-### 1. Research Environment (Before Brainstorming)
-```
-/environment-constraints
-```
-Research County of Tulare's likely IT environment, security requirements, and technical constraints.
-Output: `docs/requirements/environment-constraints.md`
+Run `python scripts/campaign.py status` to see current campaign state.
 
-### 2. Brainstorm Approach
-```
-/brainstorming
-```
-Design the demo approach, architecture, and implementation plan.
-Output: `docs/plans/` + implementation prompts
+### Phase: Scoping
+1. Research environment: `/environment-constraints`
+2. Brainstorm features (repeat per feature): `/brainstorming`
+   - Output: `docs/plans/{feature}-design.md`
+3. Align and generate build plan: `/align {project} --reorganize`
+   - Resolves cross-feature conflicts interactively
+   - Output: `docs/architecture/*`, `docs/implementation/*`
+4. Log key decisions: `python scripts/campaign.py log-decision --category architecture --summary "..." --reasoning "..."`
+5. Advance when build plan approved: `python scripts/campaign.py advance`
 
-### 3. Execute Implementation
-```
-/implementation-executor
-```
-Validate and execute implementation prompts in sequence.
+### Phase: Development (fresh Claude Code session)
+1. Read `docs/implementation/README.md` -- the build guide
+2. Execute prompts in order (01 -> 02 -> ... -> 07)
+3. Reference `docs/architecture/*` for system context
+4. Log decisions as they arise
+5. Archive completed prompts: `mv docs/implementation/0*.md docs/implementation/archive/`
+6. Advance when complete: `python scripts/campaign.py advance`
 
-### 4. Review & Refine
-Interactive review session to polish the demo.
+### Phase: Testing
+1. `docker compose up --build` -- verify the app runs
+2. Manual QA review
+3. Advance: `python scripts/campaign.py advance`
 
-### 5. Generate Documentation
-Create Technical Response Package for submission.
+### Phase: Documentation
+1. Generate Technical Response Package: `/response-package`
+2. Package for handoff: `/package`
+3. Advance to ready: `python scripts/campaign.py advance`
+
+---
+
+## Architecture Reference
+
+Before making changes to the codebase, read:
+1. `docs/architecture/architecture.md` -- system design + component diagram
+2. `docs/architecture/data-model.md` -- all tables + ER diagram
+3. `docs/architecture/api-spec.md` -- all endpoints
+
+These are your ground truth. If something contradicts an architecture doc, the architecture doc wins.
+
+> **Note**: These files are generated during the Scoping phase by `/align --reorganize`. They will be empty until alignment runs.
 
 ---
 
@@ -61,8 +101,10 @@ Create Technical Response Package for submission.
 | Skill | Purpose |
 |-------|---------|
 | environment-constraints | Research target org IT environment |
-| brainstorming | Design approach, produce implementation prompts |
+| brainstorming | Design approach, produce feature designs |
+| prompt-alignment | Align features into build-order prompts + architecture docs |
 | implementation-executor | Execute prompts with validation |
+| response-package | Generate branded RFP/RFI response package |
 | react-best-practices | React/Next.js frontend |
 | fastapi-templates | FastAPI backend |
 | ui-ux-pro-max | UI/UX design |
@@ -75,6 +117,18 @@ See `docs/solicitation/SOURCES.md` for:
 - Original solicitation document links
 - Downloaded attachments
 - Amendments
+
+---
+
+## Writing Style (All Generated Text)
+
+All prose output must avoid AI tells. This applies to code comments, docs, READMEs, commit messages, response packages, and any written content:
+- **No em dashes** (the long dash). Use commas, periods, semicolons, or parentheses instead
+- **No filler openers**: "Certainly", "Great question", "I'd be happy to", "Absolutely"
+- **No hedge stacking**: "it's important to note that", "it's worth mentioning that"
+- **No corporate fluff**: "leverage", "utilize", "facilitate", "streamline", "robust", "comprehensive", "cutting-edge"
+- **No list-love**: don't default to bullet lists when a sentence works fine
+- Write like a real engineer: direct, concise, occasional informality
 
 ---
 
