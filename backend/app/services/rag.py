@@ -93,22 +93,22 @@ async def keyword_search(
 ) -> list[dict]:
     """Fallback: full-text keyword search for chunks without embeddings."""
     pool = await get_pool()
-    words = [w.strip() for w in query.lower().split() if len(w.strip()) > 2]
+    words = [w.strip() for w in query.lower().split() if len(w.strip()) > 2][:5]
     if not words:
         return []
 
     # Build ILIKE conditions for top keywords
     like_clauses = " OR ".join(["content ILIKE $" + str(i + 1) for i in range(len(words))])
-    params = ["%" + w + "%" for w in words[:5]]
+    params: list = ["%" + w + "%" for w in words]
 
     if department_id:
         sql = f"""
             SELECT id, title, content, source_url, department_id
             FROM content_chunks
-            WHERE ({like_clauses}) AND department_id = ${len(params) + 1}
+            WHERE ({like_clauses}) AND department_id = ${len(params) + 1}::uuid
             LIMIT ${len(params) + 2}
         """
-        params.extend([_to_uuid(department_id), top_k])
+        params.extend([str(_to_uuid(department_id)), top_k])
     else:
         sql = f"""
             SELECT id, title, content, source_url, department_id
