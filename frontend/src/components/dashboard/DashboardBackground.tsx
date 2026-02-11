@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 const MOCK_STATS = [
   { label: "Total Conversations", value: "1,247", change: "+12.3%", up: true },
   { label: "Messages Processed", value: "8,432", change: "+18.7%", up: true },
@@ -72,6 +74,12 @@ export default function DashboardBackground() {
                 System Online
               </span>
               <span className="text-xs text-slate-400">Last updated: just now</span>
+              <Link
+                href="/admin"
+                className="rounded-lg bg-blue-700 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Admin Portal
+              </Link>
             </div>
           </div>
         </div>
