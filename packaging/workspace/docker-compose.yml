@@ -13,7 +13,6 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./backend/db/seed_content.sql:/docker-entrypoint-initdb.d/02-seed-content.sql
-      - ./backend/db/seed_analytics.sql:/docker-entrypoint-initdb.d/03-seed-analytics.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -37,7 +36,6 @@ services:
     build: ./frontend
     environment:
       NEXT_PUBLIC_API_URL: http://backend:8000
-      BACKEND_URL: http://backend:8000
     ports:
       - "3000:3000"
     depends_on:

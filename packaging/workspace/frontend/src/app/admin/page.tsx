@@ -11,7 +11,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  CartesianGrid,
 } from "recharts";
 import { fetchAnalytics } from "@/lib/api";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -58,7 +57,7 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [error, setError] = useState("");
-  const [days, setDays] = useState(30);
+  const [days, setDays] = useState(7);
 
   const [overview, setOverview] = useState<Overview | null>(null);
   const [departments, setDepartments] = useState<DeptData[]>([]);
@@ -154,7 +153,7 @@ export default function AdminDashboard() {
 
         {/* Overview Cards */}
         {overview && (
-          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               label={t("admin.totalConversations")}
               value={String(overview.total_conversations)}
@@ -162,6 +161,10 @@ export default function AdminDashboard() {
             <StatCard
               label={t("admin.totalMessages")}
               value={String(overview.total_messages)}
+            />
+            <StatCard
+              label={t("admin.avgResponseTime")}
+              value={`${overview.avg_response_time_ms}ms`}
             />
             <StatCard
               label={t("admin.satisfaction")}
@@ -181,18 +184,12 @@ export default function AdminDashboard() {
               {t("admin.departmentBreakdown")}
             </h2>
             {departments.length > 0 ? (
-              <ResponsiveContainer width="100%" height={departments.length * 44 + 20}>
-                <BarChart data={departments} layout="vertical" margin={{ left: 8, right: 24 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={150}
-                    tick={{ fontSize: 12 }}
-                  />
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={departments}>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-20} textAnchor="end" height={80} />
+                  <YAxis allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#2563eb" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="count" fill="#2563eb" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
