@@ -120,23 +120,13 @@ export default function AdminDashboard() {
               <p className="text-xs text-slate-500">County of Tulare, California</p>
             </div>
           </div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-600">
-            {t("admin.passwordPrompt")}
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-            className="mb-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-          <p className="mb-4 text-[11px] text-slate-400">Demo password is pre-filled for evaluation</p>
+          <p className="mb-4 text-sm text-slate-600">View chatbot analytics and conversation history.</p>
           {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
           <button
             onClick={handleLogin}
             className="w-full rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            {t("admin.login")}
+            Login
           </button>
         </div>
       </div>
