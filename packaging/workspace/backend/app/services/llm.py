@@ -70,18 +70,25 @@ async def stream_response(
 
     messages.append({"role": "user", "content": message})
 
-    try:
-        async with client.messages.stream(
-            model=settings.model_name,
-            max_tokens=settings.max_tokens,
-            system=system_prompt,
-            messages=messages,
-        ) as stream:
-            async for text in stream.text_stream:
-                yield text
-    except anthropic.APIError as e:
-        logger.error("Claude API error: %s", e)
-        if language == "es":
-            yield "Lo siento, tengo problemas para procesar su solicitud. Por favor intente de nuevo."
-        else:
-            yield "I'm sorry, I'm having trouble processing your request. Please try again."
+    models = [settings.model_name, settings.fallback_model_name]
+
+    for i, model in enumerate(models):
+        try:
+            async with client.messages.stream(
+                model=model,
+                max_tokens=settings.max_tokens,
+                system=system_prompt,
+                messages=messages,
+            ) as stream:
+                async for text in stream.text_stream:
+                    yield text
+            return  # success, stop trying
+        except anthropic.APIError as e:
+            logger.error("Claude API error (model=%s): %s", model, e)
+            if i < len(models) - 1:
+                logger.info("Falling back to %s", models[i + 1])
+                continue
+            if language == "es":
+                yield "Lo siento, tengo problemas para procesar su solicitud. Por favor intente de nuevo."
+            else:
+                yield "I'm sorry, I'm having trouble processing your request. Please try again."

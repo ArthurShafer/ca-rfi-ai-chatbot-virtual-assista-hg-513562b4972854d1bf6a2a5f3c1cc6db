@@ -164,14 +164,14 @@ export default function ChatWidget() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       {/* Department Badge */}
       {department && <DepartmentBadge name={department} />}
 
       {/* Messages */}
       <div
         ref={scrollContainerRef}
-        className="chat-scroll flex-1 px-2 py-4"
+        className="chat-scroll min-h-0 flex-1 px-2 py-4"
         role="list"
         aria-label="Chat messages"
       >

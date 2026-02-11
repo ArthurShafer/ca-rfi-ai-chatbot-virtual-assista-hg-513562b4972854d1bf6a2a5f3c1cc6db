@@ -9,9 +9,11 @@
 
 ## Executive Summary
 
-This package accompanies a working prototype of an AI-powered chatbot and virtual assistant built specifically for Tulare County's public-facing services. The demo is not a slide deck or a wireframe. It is a fully functional application that runs with a single command (`docker compose up`) and demonstrates every capability described in this document.
+This package accompanies a working prototype of an AI-powered chatbot and virtual assistant built specifically for Tulare County's public-facing services. The demo is not a slide deck or a wireframe. It is a fully functional application, deployed and accessible now at:
 
-The system helps Tulare County residents find information about county services in English and Spanish through a conversational AI interface grounded in actual county website content. It routes conversations to the appropriate department, discloses its AI nature per SB 313, and provides analytics for administrators.
+**Live Demo: https://arthurshafer.com/AI_Chatbot_Virtual_Assistant_Solutions_for_Tulare_County**
+
+The system helps Tulare County residents find information about county services in English and Spanish through a conversational AI interface grounded in actual county website content. It routes conversations to the appropriate department, discloses its AI nature per SB 313, and provides analytics for administrators. The frontend follows the California State Web Template (CA.gov Oceanside theme) and uses the official Tulare County seal.
 
 We built this as a teaming partner asset. The technical implementation is ready. What we bring to a prime contractor is a working solution, architecture documentation, API specifications, deployment playbooks, and cost models. The prime brings contracting credentials, agency relationships, past performance, and bid infrastructure.
 
@@ -123,7 +125,7 @@ The system minimizes data collection (no PII required to use the chatbot), maint
 | Frontend | Next.js 16 (App Router), React 19 | Server-side rendering, streaming support, production-grade framework |
 | Styling | Tailwind CSS v4 | Rapid UI development, government-appropriate visual design |
 | Backend | FastAPI (Python 3.12) | Async-native, fast, strong typing, built for AI/ML workloads |
-| LLM | Claude Haiku 4.5 (Anthropic) | Fast responses (~1-2s), low cost ($0.01/conversation), Constitutional AI safety |
+| LLM | Claude Haiku 4.5 with Sonnet 4.5 fallback | Fast responses (~1-2s), low cost ($0.01/conversation), automatic fallback to stronger model on error |
 | Embeddings | all-MiniLM-L6-v2 (sentence-transformers) | Runs locally, no API dependency, no per-query cost, 384 dimensions |
 | Database | PostgreSQL 16 + pgvector | Vector search and relational data in one database, mature ecosystem |
 | Containerization | Docker Compose | One-command full-stack deployment, reproducible environments |
@@ -283,12 +285,14 @@ docker compose up --build
 
 Then open:
 - **Chat interface**: http://localhost:3000
-- **Admin dashboard**: http://localhost:3000/admin (password: `demo2026`)
+- **Admin dashboard**: http://localhost:3000/admin (click Login)
 - **API health check**: http://localhost:8000/health
+
+Or view the live deployment at: **https://arthurshafer.com/AI_Chatbot_Virtual_Assistant_Solutions_for_Tulare_County**
 
 ### Demo Walkthrough (15 minutes)
 
-1. **Landing page** (2 min): Show the analytics dashboard background with the floating chat widget. Point out the SB 313 disclosure banner and the EN/ES language toggle.
+1. **County website** (2 min): Show the main page designed after the CA.gov State Web Template with the official Tulare County seal. Point out the floating chat widget in the bottom-right corner, the SB 313 disclosure banner, and the EN/ES language toggle.
 
 2. **English conversation** (3 min): Ask "How do I apply for CalFresh benefits?" Watch the streaming response with source links. Note the department badge (HHSA) and the grounded answer.
 
@@ -298,7 +302,7 @@ Then open:
 
 5. **Escalation** (1 min): Click "Talk to a person" to show the escalation panel with department phone numbers.
 
-6. **Admin dashboard** (3 min): Navigate to /admin, enter the password. Show conversation stats, department breakdown chart, language pie chart, top questions, and recent conversations.
+6. **Admin dashboard** (3 min): Click "Admin Dashboard" in the header, then "Login." Show conversation stats, department breakdown chart, language donut chart, top questions, and recent conversations with the period selector (7/30/90 days).
 
 7. **Architecture walkthrough** (2 min): Show the Docker Compose setup, the API spec, the RAG pipeline. Emphasize the clean separation between frontend and backend ("you build the UI, we provide the API").
 
