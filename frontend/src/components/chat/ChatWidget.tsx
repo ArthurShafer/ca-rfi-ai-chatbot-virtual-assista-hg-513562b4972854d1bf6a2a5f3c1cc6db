@@ -14,6 +14,8 @@ interface Message {
   content: string;
 }
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 export default function ChatWidget() {
   const { language, t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -38,7 +40,7 @@ export default function ChatWidget() {
       setIsStreaming(true);
 
       try {
-        const res = await fetch("/api/chat", {
+        const res = await fetch(`${basePath}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -83,7 +85,10 @@ export default function ChatWidget() {
               if (parsed.conversation_id) {
                 setConversationId(parsed.conversation_id);
                 if (parsed.department) {
-                  setDepartment(parsed.department);
+                  const dept = parsed.department;
+                  setDepartment(
+                    typeof dept === "string" ? dept : dept.name || dept.slug
+                  );
                 }
                 continue;
               }
