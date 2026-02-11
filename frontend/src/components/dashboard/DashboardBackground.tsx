@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 const DEPARTMENTS = [
@@ -67,16 +69,24 @@ export default function DashboardBackground() {
               <p className="text-[12px] text-[#666]">California</p>
             </div>
           </div>
-          <div className="hidden items-center gap-1 md:flex">
-            <input
-              type="text"
-              placeholder="Search county services..."
-              className="w-52 rounded-l border border-[#d4d4d4] bg-[#fafafa] px-3 py-1.5 text-[13px] text-[#333] placeholder-[#999] focus:border-[#046b99] focus:outline-none"
-              readOnly
-            />
-            <button className="rounded-r bg-[#046b99] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[#035a80]">
-              Search
-            </button>
+          <div className="hidden items-center gap-3 md:flex">
+            <Link
+              href="/admin"
+              className="rounded bg-[#fdb81e] px-4 py-2 text-[13px] font-bold text-[#323a45] shadow-sm transition-colors hover:bg-[#e5a617]"
+            >
+              Admin Dashboard
+            </Link>
+            <div className="flex items-center gap-0">
+              <input
+                type="text"
+                placeholder="Search county services..."
+                className="w-52 rounded-l border border-[#d4d4d4] bg-[#fafafa] px-3 py-1.5 text-[13px] text-[#333] placeholder-[#999] focus:border-[#046b99] focus:outline-none"
+                readOnly
+              />
+              <button className="rounded-r bg-[#046b99] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[#035a80]">
+                Search
+              </button>
+            </div>
           </div>
         </div>
       </div>
