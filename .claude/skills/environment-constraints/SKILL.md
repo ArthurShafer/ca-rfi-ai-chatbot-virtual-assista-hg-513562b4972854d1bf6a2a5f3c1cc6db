@@ -202,3 +202,14 @@ When brainstorming begins, load the environment constraints document and:
 - Delayed delivery trying to support every possibility
 
 The constraint research informs your decisions, it doesn't make them for you.
+
+## Handoff to Brainstorming
+
+After writing the constraints document to `docs/requirements/`, proceed directly to brainstorming if the scoping workflow is active. The brainstorming skill will:
+
+1. Load the constraints document at the start of each feature brainstorm
+2. Reference specific constraints when making tech stack and architecture decisions
+3. Flag in the design doc where the demo diverges from likely production environment
+4. Include constraint-informed decisions in the Technical Response Package
+
+The constraints document is the bridge between research and design. Every architecture decision in brainstorming should cite the relevant constraint (or note the absence of one).

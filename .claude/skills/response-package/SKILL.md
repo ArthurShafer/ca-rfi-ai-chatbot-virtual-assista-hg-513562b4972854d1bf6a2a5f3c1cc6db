@@ -82,7 +82,7 @@ Produce an internal "demo profile" summary:
 Load `company-profile.json`. Search in order:
 1. Current repo root
 2. `{contracts_root}/company-profile.json` (using `contracts_root` from `.campaign.json`)
-3. `C:\Dev\contracts\company-profile.json` (hardcoded fallback)
+3. `C:\Users\artjs\Dev\statecontracts\company-profile.json` (hardcoded fallback)
 
 Parse the JSON. This provides: company name, owner bio, capabilities, NAICS codes, differentiators, past performance, business info.
 

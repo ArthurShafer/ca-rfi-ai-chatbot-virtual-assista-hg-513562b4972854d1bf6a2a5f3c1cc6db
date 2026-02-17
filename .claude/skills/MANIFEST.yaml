@@ -21,6 +21,10 @@ core:
     source: local
     purpose: "Passthrough validation and execution workflow with cost estimates"
 
+  - name: demo-polish
+    source: local
+    purpose: "Polish campaign demo: landing page, visual identity, AI theatrics. Post-testing, pre-deploy."
+
   - name: demo-packager
     source: local
     purpose: "7-phase packaging pipeline: dev repo to professional deliverable with clean code, branded docs, Terraform IaC, curated git history, and zero AI fingerprints"
@@ -93,6 +97,10 @@ core:
     source: wshobson/agents
     purpose: "Git workflows and clean history"
 
+  - name: demo-deploy
+    source: local
+    purpose: "Deploy campaign demo to shared DigitalOcean Droplet via Docker + Caddy"
+
   # ═══════════════════════════════════════════════════════════════
   # DOCUMENTATION
   # ═══════════════════════════════════════════════════════════════
@@ -118,6 +126,13 @@ core:
   - name: mcp-integration
     source: anthropics/claude-code
     purpose: "MCP server integration"
+
+  # ═══════════════════════════════════════════════════════════════
+  # QUALITY & FEEDBACK
+  # ═══════════════════════════════════════════════════════════════
+  - name: pipeline-retrospective
+    source: local
+    purpose: "Post-build audit: reads session transcripts, traces user corrections back to pipeline gaps, outputs generalized improvement recommendations"
 
   # ═══════════════════════════════════════════════════════════════
   # OTHER

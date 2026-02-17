@@ -194,12 +194,24 @@ This is a back-and-forth discussion. For each discrepancy found by the agents:
    - Option C: Your recommended compromise
    - Other: User provides custom resolution
 
-3. **Log the decision** inline:
+3. **Log the decision** inline and to the structured log:
    ```
    DECISION: architecture - {summary}
    CONFLICT: {feature A} vs {feature B}
    RESOLUTION: {what was chosen}
    REASONING: {why}
+   ```
+
+   Then persist it:
+   ```bash
+   python scripts/log_decision.py \
+     --category architecture \
+     --summary "{summary}" \
+     --reasoning "{why}" \
+     --proposed "{feature A approach}" \
+     --changed "{resolution}" \
+     --alternatives "{feature A approach},{feature B approach}" \
+     --confidence {high|medium|low}
    ```
 
 **Categories of discrepancies to resolve**:
@@ -280,6 +292,97 @@ For each layer prompt, write a complete implementation prompt following `docs/im
 Write all prompts to `docs/implementation/` (NOT `docs/implementation-prompts/` — this is the build-order output, separate from any brainstorm-stage rough prompts).
 
 Write `docs/implementation/MANIFEST.md` with the standard manifest format.
+
+## Reorganize Phase 4b: Parallel Build Analysis
+
+**Goal**: Determine if the prompts can be split into parallel build agents to cut wall-clock time and reduce per-session context.
+
+### When to Parallelize
+
+| Condition | Result |
+|-----------|--------|
+| 5+ prompts with a clear backend/frontend split | **Parallel** |
+| Architecture docs define the full API contract (api-spec.md) | **Parallel** |
+| <5 prompts total | **Sequential** |
+| Single-directory project (no backend/frontend separation) | **Sequential** |
+| Tightly coupled layers where frontend needs live backend to build | **Sequential** |
+
+### Analysis Steps
+
+1. **Build the dependency DAG** from the MANIFEST.md Dependencies column.
+
+2. **Identify file ownership per prompt**: Which directories does each prompt create or modify? Look at the "Files to Create/Modify" table in each prompt.
+
+3. **Find the natural split**:
+   - **Setup prompts**: Depend on nothing, create scaffolding for both sides (typically prompt 01)
+   - **Backend chain**: Prompts whose files are exclusively in `backend/` (or equivalent server directory)
+   - **Frontend chain**: Prompts whose files are exclusively in `frontend/` (or equivalent client directory)
+   - **Integration prompts**: Touch both `backend/` and `frontend/` (typically the last prompt)
+
+4. **Validate the split**:
+   - Backend chain must not need frontend code to compile or run
+   - Frontend chain must not need a running backend (api-spec.md suffices for types and contracts)
+   - No two parallel prompts touch the same file
+   - Shared config files (docker-compose.yml, .gitignore) are created by setup, not modified by parallel agents
+
+5. **If valid split found**:
+   - Write `docs/implementation/execution-plan.json`:
+     ```json
+     {
+       "strategy": "parallel",
+       "setup_prompts": ["01"],
+       "agents": [
+         {
+           "name": "backend",
+           "prompts": ["02", "03", "04"],
+           "owns": ["backend/"],
+           "docs": ["architecture.md", "data-model.md", "api-spec.md"]
+         },
+         {
+           "name": "frontend",
+           "prompts": ["05", "06"],
+           "owns": ["frontend/"],
+           "docs": ["architecture.md", "api-spec.md"]
+         }
+       ],
+       "integration_prompts": ["07"]
+     }
+     ```
+   - Update MANIFEST.md to show parallel groups (see format below)
+
+6. **If no valid split**: Either omit `execution-plan.json` or write it with `"strategy": "sequential"`. The build script falls back to single-session mode.
+
+### Updated MANIFEST.md Format (Parallel)
+
+When parallel execution is detected, structure MANIFEST.md like this:
+
+```markdown
+## Execution Strategy: Parallel
+
+### Phase 1: Setup (Sequential)
+| # | Title | Layer | Scope | Status | Dependencies |
+|---|-------|-------|-------|--------|-------------|
+| 01 | Project Setup & Docker | Foundation | Medium | Pending | None |
+
+### Phase 2: Parallel Build
+**Agent A (backend/)**:
+| # | Title | Layer | Scope | Status | Dependencies |
+|---|-------|-------|-------|--------|-------------|
+| 02 | Database Schema & Seed Data | Data | Large | Pending | 01 |
+| 03 | Backend Services | Services | Large | Pending | 02 |
+| 04 | API Routes | API | Large | Pending | 03 |
+
+**Agent B (frontend/)**:
+| # | Title | Layer | Scope | Status | Dependencies |
+|---|-------|-------|-------|--------|-------------|
+| 05 | Frontend Foundation | Frontend | Large | Pending | 01 |
+| 06 | Frontend Pages | Frontend | Large | Pending | 05 |
+
+### Phase 3: Integration (Sequential)
+| # | Title | Layer | Scope | Status | Dependencies |
+|---|-------|-------|-------|--------|-------------|
+| 07 | Integration & Deploy | Integration | Large | Pending | 04, 06 |
+```
 
 ## Reorganize Phase 5: Architecture Documentation
 
@@ -403,7 +506,11 @@ The CLAUDE.md in the campaign repo should reference these docs in "Before making
 
 ## Reorganize Phase 6: Execution Guide
 
-**Goal**: Write the README.md that a fresh execution session uses to build the application.
+**Goal**: Write the README.md that a fresh execution session (or `launch-build.ps1`) uses to build the application.
+
+The format depends on whether Phase 4b produced a parallel execution plan.
+
+### Sequential README (no execution-plan.json or strategy=sequential)
 
 Write `docs/implementation/README.md`:
 
@@ -474,7 +581,155 @@ python scripts/campaign.py advance --to testing
 - Total estimated build: ~{Z}K tokens across all prompts
 ```
 
+### Parallel README (when execution-plan.json has strategy=parallel)
+
+Write `docs/implementation/README.md` with the parallel execution graph instead of a linear sequence:
+
+```markdown
+# {Project Name} — Build Guide
+
+> **Purpose**: This project uses parallel build agents for faster builds and smaller context windows.
+> `launch-build.ps1` reads `execution-plan.json` and orchestrates everything automatically.
+
+## What You're Building
+{2-3 sentence summary}
+
+## Execution Graph
+
+```
+Setup (01)  ─── synchronous, creates scaffolding for both sides
+     │
+     ├── Agent A (backend)  ─── prompts 02, 03, 04
+     │     Owns: backend/
+     │     Reads: architecture.md, data-model.md, api-spec.md
+     │
+     └── Agent B (frontend)  ─── prompts 05, 06
+           Owns: frontend/
+           Reads: architecture.md, api-spec.md
+                       │
+         Both signal via check-parallel-done.ps1
+                       │
+Integration (07)  ─── wires frontend to backend, fixes mismatches
+```
+
+## Architecture Reference
+
+Before starting, read these docs for the full picture:
+1. `docs/architecture/architecture.md` — system design + component diagram
+2. `docs/architecture/data-model.md` — all tables + ER diagram
+3. `docs/architecture/api-spec.md` — all endpoints
+
+These are your ground truth. If a prompt contradicts an architecture doc, the architecture doc wins.
+
+## Agent-Specific Reading Lists
+
+**Agent A (backend)**: CLAUDE.md, architecture.md, data-model.md, api-spec.md
+**Agent B (frontend)**: CLAUDE.md, architecture.md, api-spec.md (no data-model.md needed)
+**Integration**: CLAUDE.md, all three architecture docs
+
+## How Parallel Completion Works
+
+Each agent's final action is `powershell -File scripts/check-parallel-done.ps1 -Agent <name>`.
+This writes a `.agent-<name>-complete` marker file. When both markers exist, integration launches
+automatically via `launch-integrate.ps1`. An atomic file lock (`.integration-lock`) prevents
+duplicate integration sessions if both agents finish simultaneously.
+
+---
+
+{Per-prompt sections grouped by agent, with: What It Does, Key Files Created, Verify After Completing}
+
+---
+
+## After All Prompts
+
+### Verify the Build
+```bash
+docker compose up --build
+# App should be accessible at http://localhost:{port}
+# Health check: curl http://localhost:{port}/health
+```
+
+### Archive Completed Prompts
+```bash
+mkdir -p docs/implementation/archive
+mv docs/implementation/0*.md docs/implementation/archive/
+```
+
+### Update Campaign Status
+```bash
+python scripts/campaign.py advance --to testing
+```
+
+## Context Budget
+- Setup: ~{X}K tokens
+- Agent A ({N} prompts): ~{Y}K tokens
+- Agent B ({M} prompts): ~{Z}K tokens
+- Integration: ~{W}K tokens
+- Total: ~{T}K tokens (vs ~{S}K sequential = {R}x reduction)
+```
+
 Present the complete execution guide to the user for final review.
+
+## Reorganize Phase 7: Launch Build Session
+
+**Goal**: Hand off to `launch-build.ps1`, which reads the execution plan and orchestrates everything.
+
+After the execution guide is reviewed (or immediately, if running in auto-start mode with no user present):
+
+### Step 1: Write Build Marker
+
+Write `.build-ready` to the repo root with session metadata:
+
+```json
+{
+  "created_at": "ISO timestamp",
+  "prompt_count": 7,
+  "strategy": "parallel or sequential",
+  "architecture_docs": ["docs/architecture/architecture.md", "docs/architecture/data-model.md", "docs/architecture/api-spec.md"],
+  "build_guide": "docs/implementation/README.md",
+  "execution_plan": "docs/implementation/execution-plan.json",
+  "source_phase": "scoping"
+}
+```
+
+### Step 2: Advance Campaign Lane
+
+```bash
+python scripts/campaign.py advance --force
+```
+
+This moves the campaign from `scoping` to `development`.
+
+### Step 3: Launch Build via Script
+
+Run `launch-build.ps1`. The script reads `docs/implementation/execution-plan.json` and decides:
+- **Parallel**: Runs setup synchronously, then spawns Agent A + Agent B in separate windows
+- **Sequential**: Spawns a single build session (original behavior)
+
+```bash
+powershell -File scripts/launch-build.ps1
+```
+
+Do NOT construct the claude launch command manually. The script handles everything: prompt construction, scaffolding verification, agent spawning, and session cleanup.
+
+### Step 4: Report Completion
+
+Tell the user:
+
+> Scoping complete. All architecture docs and build prompts written to disk.
+
+If parallel mode:
+> Build launching with parallel agents (backend + frontend). Setup runs first, then two agent windows open simultaneously. Integration launches automatically when both finish.
+
+If sequential mode:
+> A fresh build session has launched in a new terminal window.
+
+> This session's work is done. You can close this window.
+
+If the Bash launch fails (e.g., not on Windows, or PowerShell not available), fall back to:
+
+> Scoping complete. To start building, open a new Claude Code session in this directory and run:
+> `claude --dangerously-skip-permissions "Read docs/implementation/README.md and execute all build prompts in order."`
 
 ---
 
@@ -548,12 +803,17 @@ Scoping Phase (same Claude Code session):
   ↓
 Alignment Phase (same session):
   3. /align {project} --reorganize — resolve conflicts, write build prompts
-     Output: docs/architecture/*, docs/implementation/*
+     Output: docs/architecture/*, docs/implementation/*, execution-plan.json
+     Phase 4b determines parallel vs sequential strategy
   ↓
-Development Phase (fresh session for clean context):
-  4. Follow docs/implementation/README.md
-     Build: 01 → 02 → 03 → 04 → 05 → 06 → 07
-     Reference: docs/architecture/* for any questions
+Development Phase (launch-build.ps1 orchestrates):
+  If parallel (5+ prompts, clear backend/frontend split):
+    Setup: prompt 01 runs synchronously
+    Agent A: backend prompts in fresh session
+    Agent B: frontend prompts in fresh session (simultaneous)
+    Integration: final prompt wires everything together
+  If sequential:
+    Single session: 01 → 02 → ... → 07
   ↓
 Testing Phase:
   5. docker compose up, smoke tests, manual QA

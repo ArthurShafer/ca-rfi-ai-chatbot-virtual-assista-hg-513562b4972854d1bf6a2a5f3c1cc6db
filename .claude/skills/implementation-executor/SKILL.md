@@ -169,21 +169,23 @@ Execute in parallel? [Yes/No]
 
 ## Integration with Decision Logging
 
-Significant implementation decisions should be auto-logged via the campaign bridge CLI.
+Significant implementation decisions should be auto-logged after each one is made.
 
 After each significant decision during prompt execution (architectural choices, scope adjustments, workarounds, user overrides), run:
 
 ```bash
-python scripts/campaign.py log-decision \
+python scripts/log_decision.py \
   --category implementation \
   --summary "One-line description" \
   --reasoning "Why this approach" \
+  --proposed "What was originally planned" \
   --phase development \
   --step "Prompt {number}"
 ```
 
-If `scripts/campaign.py` is not available, fall back to inline logging:
+**Fallback** (campaign repos with campaign.py): `python scripts/campaign.py log-decision --category implementation --summary "..." --reasoning "..."`
 
+**Last resort** (no scripts available):
 ```
 DECISION: implementation - {summary}
 PROMPT: {prompt number}

@@ -15,6 +15,29 @@ arguments:
 
 Transform a development repository into a professional deliverable package for prime contractor handoff. The output includes clean code, branded documentation (PDF/DOCX), Terraform infrastructure-as-code, curated git history, and zero AI fingerprints.
 
+## Relationship to the Delivery Prep Pipeline
+
+The 8-stage Delivery Prep pipeline (defined in `docs/MasterPlan/integration-strategy.md`) is a superset of this packager. The Delivery Prep pipeline adds constraint profiling, security remediation, compliance mapping, SBOM generation, and other hardening steps that this packager does not cover.
+
+**How the phases map:**
+
+| Demo Packager Phase | Delivery Prep Stage | Notes |
+|--------------------|--------------------|-------|
+| Phase 1 (Project Analysis) | Stage 0 (Delivery Audit) | Stage 0 is a superset: adds constraint profiling and compliance pre-check |
+| Phase 2 (Repo Cleanup) | Stage 7 (Final Assembly) | Cleanup moves to the end in the delivery pipeline |
+| Phase 3 (Git History) | Stage 7 (Final Assembly) | Same |
+| Phase 4 (Terraform) | Stage 5 (Architecture Docs) | Optional sub-step within deployment documentation |
+| Phase 5 (Doc Generation) | Stages 4-5 (Documentation Phase) | Delivery pipeline produces more thorough, constraint-driven docs |
+| Phase 6 (Quality/Rewrite) | Stage 7 (Final Assembly QA) | Same quality gate tooling |
+| Phase 7 (Render/Finalize) | Stage 7 (Final Assembly) | Same |
+
+**When to use this packager vs. the full Delivery Prep pipeline:**
+
+- **This packager**: Quick packaging for demos that don't need the full hardening/compliance treatment. Good for demos where the prime doesn't need security posture docs, compliance mappings, or SBOMs.
+- **Delivery Prep pipeline**: Post-agreement deliverables where the prime's security team, compliance team, and integrators all need documentation. The full 8-stage process with code freeze boundary.
+
+The existing templates at `templates/docs/` and CLI tools (`preflight.py`, `quality_gate.py`) remain useful as building blocks within both workflows.
+
 ## Build-Time Standards
 
 These conventions apply **during development**, not just at packaging time. Following them makes packaging near-automatic and avoids last-minute restructuring.
@@ -101,15 +124,32 @@ These choices are made per-demo based on what creates the best result:
 
 The outer shell (Docker, .env, README) is standardized. The app inside is whatever makes the best demo.
 
+## Path Resolution
+
+This skill runs from a **campaign repo**, but several tools and templates live in the **contracts monorepo**. Read `.campaign.json` at the campaign repo root and extract `contracts_root` (e.g., `C:\Users\artjs\Dev\statecontracts`). All monorepo paths below use `{contracts_root}` as prefix.
+
+| Resource | Path |
+|----------|------|
+| Quality gate CLI | `{contracts_root}/scripts/package_demo.py` |
+| Render script | `{contracts_root}/scripts/render_response.py` |
+| Doc templates | `{contracts_root}/templates/docs/` (12 templates) |
+| Deliverable CSS | `{contracts_root}/templates/deliverable.css` |
+| Terraform modules | `{contracts_root}/terraform/modules/` |
+| Writing style guide | `.claude/skills/demo-packager/writing-style-guide.md` (bundled in campaign repo) |
+| Git history guide | `.claude/skills/demo-packager/git-history-guide.md` (bundled in campaign repo) |
+| Terraform guide | `.claude/skills/demo-packager/terraform-guide.md` (bundled in campaign repo) |
+
+If `.campaign.json` is missing, fall back to `C:\Users\artjs\Dev\statecontracts` as the contracts root.
+
 ## Prerequisites
 
 Before running, verify:
 - The demo project builds and runs successfully
-- `scripts/package_demo.py` is available (quality gate CLI)
+- `{contracts_root}/scripts/package_demo.py` is available (quality gate CLI)
 - Vale is installed (`vale --version`)
 - Pandoc + WeasyPrint are installed
-- Templates exist at `templates/docs/` and `templates/deliverable.css`
-- Terraform modules exist at `terraform/modules/`
+- Templates exist at `{contracts_root}/templates/docs/` and `{contracts_root}/templates/deliverable.css`
+- Terraform modules exist at `{contracts_root}/terraform/modules/`
 
 ## Phase 1: Project Analysis
 
@@ -129,6 +169,7 @@ Before analysis, verify the project followed build-time standards (see CLAUDE.md
 | 6 | App boots with seed data (not empty) | Required | Add seed data fixtures or "Load Sample Data" button |
 | 7 | Terraform uses `default_tags` with `Project` tag | Required | Add to provider block |
 | 8 | README exists with Quick Start section | Recommended | Will be generated in Phase 5 if missing |
+| 9 | Landing page / intro screen exists as the entry point | Required | Add before the main app view (see CLAUDE.md standard #9) |
 
 If items 1-7 are missing, **fix them before proceeding to Phase 2**. These are foundational — retrofitting them during packaging is expensive and error-prone.
 
@@ -167,17 +208,19 @@ Save this profile to `packaging/project-profile.md` for reference in later phase
 
 2. **Run pre-flight with --fix**:
    ```bash
-   python scripts/package_demo.py preflight packaging/workspace/ --fix --verbose
+   python {contracts_root}/scripts/package_demo.py preflight packaging/workspace/ --fix --verbose
    ```
 
 3. **Manual cleanup** (items the CLI might miss):
    - Remove any remaining `.claude/` directories
    - Remove `CLAUDE.md`, `TODO.md`, `WORK-COMPLETED.md`
-   - Remove `docs/implementation-prompts/`, `docs/plans/`
+   - Remove `docs/implementation-prompts/`, `docs/plans/`, `docs/implementation/`
    - Remove `logs/decisions/`, `ClaudeCrossTalk/`, `brainstorming/`
    - Remove `*.ps1` deployment scripts
    - Remove `skills/` directory (copied for Docker builds)
    - Remove `source.tar.gz` and build artifacts
+   - Remove `.campaign.json`, `.build-ready`
+   - Remove references to `arthurshafer.com` hosting from any docs (partner gets deployment-guide.md for AWS, not VPS details)
 
 4. **Clean source code**:
    - Remove comments containing "Claude", "AI", "Generated by"
@@ -236,9 +279,9 @@ Load the detailed guide from `.claude/skills/demo-packager/terraform-guide.md` b
    - Include `dns-ssl` if the project uses a custom domain
    - Include `s3-backend` for state management
 
-2. **Copy template modules**:
+2. **Copy template modules** from the contracts monorepo:
    ```bash
-   cp -r terraform/modules/ packaging/workspace/terraform/modules/
+   cp -r {contracts_root}/terraform/modules/ packaging/workspace/terraform/modules/
    ```
 
 3. **Write application-specific Terraform** in `packaging/workspace/terraform/`:
@@ -263,7 +306,7 @@ Load the detailed guide from `.claude/skills/demo-packager/terraform-guide.md` b
 
 Load the writing style guide from `.claude/skills/demo-packager/writing-style-guide.md` and follow it for ALL generated text.
 
-1. **Load templates** from `templates/docs/` (12 templates)
+1. **Load templates** from `{contracts_root}/templates/docs/` (12 templates)
 
 2. **Generate each document** using the project profile from Phase 1:
 
@@ -306,7 +349,7 @@ Load the writing style guide from `.claude/skills/demo-packager/writing-style-gu
 
 1. **Run quality gate**:
    ```bash
-   python scripts/package_demo.py quality-gate packaging/workspace/ --verbose
+   python {contracts_root}/scripts/package_demo.py quality-gate packaging/workspace/ --verbose
    ```
 
 2. **Review flagged items** from Vale output:
@@ -330,7 +373,7 @@ Load the writing style guide from `.claude/skills/demo-packager/writing-style-gu
 
 6. **Optional**: Run GPTZero if API key is available:
    ```bash
-   python scripts/package_demo.py quality-gate packaging/workspace/ --gptzero-api-key $GPTZERO_API_KEY
+   python {contracts_root}/scripts/package_demo.py quality-gate packaging/workspace/ --gptzero-api-key $GPTZERO_API_KEY
    ```
 
 ## Phase 7: Render and Finalize
@@ -339,13 +382,13 @@ Load the writing style guide from `.claude/skills/demo-packager/writing-style-gu
 
 1. **Render documents**:
    ```bash
-   python scripts/package_demo.py render packaging/workspace/ --verbose
+   python {contracts_root}/scripts/package_demo.py render packaging/workspace/ --verbose
    ```
    This produces PDF and DOCX in `deliverables/pdf/` and `deliverables/docx/`.
 
 2. **Run final validation**:
    ```bash
-   python scripts/package_demo.py validate packaging/workspace/ --verbose
+   python {contracts_root}/scripts/package_demo.py validate packaging/workspace/ --verbose
    ```
 
 3. **Produce packaging report** (`packaging/PACKAGING-REPORT.md`):
